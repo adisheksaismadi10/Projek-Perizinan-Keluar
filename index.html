@@ -2,25 +2,24 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pos Jaga Asrama — Catatan Keluar Masuk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
     --bg: #EEF2ED;
     --surface: #FFFFFF;
-    --ink: #202B28;
-    --ink-soft: #5C6864;
+    --ink: #1B2624;
+    --ink-soft: #55635F;
     --primary: #1F4B4C;
-    --primary-dark: #143332;
+    --primary-dark: #12302F;
     --accent: #E0982A;
-    --danger: #B5482E;
-    --success: #3E7A5D;
-    --border: #D7DED9;
-    --radius: 10px;
-    --shadow: 0 3px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
+    --danger: #BA3D22;
+    --success: #2E7D56;
+    --border: #D0D8D3;
+    --radius: 14px;
   }
 
   *, *::before, *::after {
@@ -34,115 +33,107 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     color: var(--ink);
     min-height: 100vh;
-    padding: max(16px, 3vh) max(12px, 3vw) 60px;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
+    padding: 16px 14px 60px;
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Responsive Wrapper that scales gracefully */
   .wrap{
     width: 100%;
-    max-width: 520px;
+    max-width: 480px;
+    margin: 0 auto;
     transition: max-width 0.25s ease;
   }
 
   .wrap.wide{
-    max-width: 760px;
+    max-width: 800px;
   }
 
-  /* Masthead Header */
+  /* Header */
   .masthead{
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    border-bottom: 2px solid var(--primary);
+    border-bottom: 2.5px solid var(--primary);
     padding-bottom: 12px;
-    margin-bottom: 18px;
-    gap: 12px;
-    flex-wrap: wrap;
+    margin-bottom: 16px;
+    gap: 10px;
   }
 
   .masthead h1{
     font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(1.15rem, 4vw, 1.4rem);
+    font-size: 21px;
     font-weight: 700;
     color: var(--primary-dark);
     line-height: 1.2;
-    flex: 1 1 200px;
   }
 
   .clock{
     font-family: 'IBM Plex Mono', monospace;
     text-align: right;
     color: var(--ink-soft);
-    font-size: clamp(11px, 2.5vw, 12.5px);
+    font-size: 12px;
     flex-shrink: 0;
   }
   .clock .time{
-    font-size: clamp(16px, 4vw, 20px);
+    font-size: 18px;
     color: var(--primary-dark);
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: -0.5px;
+    margin-top: 2px;
   }
 
-  /* Cards */
+  /* Card */
   .card{
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: clamp(16px, 4vw, 24px);
+    padding: 20px 18px;
     margin-bottom: 16px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
   }
 
   /* Mode Switch Toggle */
   .toggle{
     display: flex;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
     background: var(--bg);
     padding: 3px;
     gap: 4px;
   }
   .toggle button{
     flex: 1;
-    min-height: 44px;
-    padding: 10px 4px;
+    min-height: 48px;
+    padding: 10px 6px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     background: transparent;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(14px, 3.5vw, 15.5px);
+    font-size: 16px;
     font-weight: 700;
     color: var(--ink-soft);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
     -webkit-tap-highlight-color: transparent;
   }
   .toggle button.active.keluar{
     background: var(--danger);
     color: #fff;
-    box-shadow: 0 2px 6px rgba(181, 72, 46, 0.3);
+    box-shadow: 0 2px 8px rgba(186, 61, 34, 0.3);
   }
   .toggle button.active.masuk{
     background: var(--success);
     color: #fff;
-    box-shadow: 0 2px 6px rgba(62, 122, 93, 0.3);
-  }
-  .toggle button:not(.active):hover{
-    background: rgba(0,0,0,0.04);
-    color: var(--ink);
+    box-shadow: 0 2px 8px rgba(46, 125, 86, 0.3);
   }
 
   /* Form Elements */
   label{
     display: block;
-    font-size: 13px;
-    color: var(--ink-soft);
+    font-size: 14px;
+    color: var(--ink);
     margin: 14px 0 6px;
     font-weight: 600;
   }
@@ -150,10 +141,10 @@
 
   input, textarea, select{
     width: 100%;
-    min-height: 44px; /* iOS standard touch target */
-    padding: 10px 14px;
+    min-height: 48px;
+    padding: 12px 14px;
     border: 1.5px solid var(--border);
-    border-radius: 8px;
+    border-radius: 9px;
     font-size: 16px; /* Prevents auto-zoom on iOS */
     font-family: inherit;
     color: var(--ink);
@@ -163,37 +154,37 @@
     appearance: none;
   }
 
-  /* Custom dropdown arrow for selects */
   select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6864' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2355635F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 12px center;
+    background-position: right 14px center;
     background-size: 16px;
-    padding-right: 36px;
+    padding-right: 40px;
   }
 
   input:focus, textarea:focus, select:focus{
     outline: none;
     border-color: var(--primary);
     background: var(--surface);
-    box-shadow: 0 0 0 3px rgba(31, 75, 76, 0.12);
+    box-shadow: 0 0 0 3px rgba(31, 75, 76, 0.15);
   }
+
   textarea{
     resize: vertical;
-    min-height: 72px;
-    line-height: 1.4;
+    min-height: 80px;
+    line-height: 1.45;
   }
 
   /* Submit Button */
   .submit-btn{
     width: 100%;
-    margin-top: 22px;
-    min-height: 48px;
-    padding: 12px 16px;
+    margin-top: 20px;
+    min-height: 52px;
+    padding: 14px 16px;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-family: 'Space Grotesk', sans-serif;
-    font-size: clamp(15px, 3.5vw, 16.5px);
+    font-size: 16.5px;
     font-weight: 700;
     color: #fff;
     cursor: pointer;
@@ -201,16 +192,15 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
   }
   .submit-btn:active{transform: scale(0.99);}
   .submit-btn.keluar{
     background: var(--danger);
-    box-shadow: 0 3px 10px rgba(181, 72, 46, 0.25);
+    box-shadow: 0 4px 12px rgba(186, 61, 34, 0.25);
   }
   .submit-btn.masuk{
     background: var(--success);
-    box-shadow: 0 3px 10px rgba(62, 122, 93, 0.25);
+    box-shadow: 0 4px 12px rgba(46, 125, 86, 0.25);
   }
   .submit-btn:disabled{
     opacity: 0.65;
@@ -221,9 +211,9 @@
   /* Feedback Alerts */
   .feedback{
     margin-top: 14px;
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 14px;
+    padding: 14px 16px;
+    border-radius: 9px;
+    font-size: 14.5px;
     line-height: 1.5;
     display: none;
     animation: fadeIn 0.2s ease;
@@ -233,19 +223,19 @@
     to { opacity: 1; transform: translateY(0); }
   }
   .feedback.show{display: block;}
-  .feedback.ok{background: #E4F0E9; color: var(--success); border: 1px solid #BFDECB;}
-  .feedback.warn{background: #FBEDE3; color: var(--danger); border: 1px solid #F0CDB8;}
-  .feedback.info{background: #EBF3F5; color: var(--primary); border: 1px solid #C4DDE2;}
+  .feedback.ok{background: #E4F0E9; color: var(--success); border: 1.5px solid #BFDECB;}
+  .feedback.warn{background: #FBEDE3; color: var(--danger); border: 1.5px solid #F0CDB8;}
+  .feedback.info{background: #EBF3F5; color: var(--primary); border: 1.5px solid #C4DDE2;}
 
   .admin-link{
     text-align: center;
-    font-size: 13.5px;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--ink-soft);
     text-decoration: underline;
     cursor: pointer;
-    margin-top: 12px;
-    padding: 6px;
-    transition: color 0.15s;
+    margin-top: 14px;
+    padding: 10px;
     user-select: none;
   }
   .admin-link:hover{color: var(--primary);}
@@ -258,29 +248,29 @@
   }
   .pin-row input{flex: 1;}
   .pin-row button{
-    padding: 0 clamp(14px, 3vw, 20px);
-    min-height: 44px;
+    padding: 0 20px;
+    min-height: 48px;
     border: none;
-    border-radius: 8px;
+    border-radius: 9px;
     background: var(--primary);
     color: #fff;
     font-family: 'Space Grotesk', sans-serif;
     font-weight: 700;
-    font-size: 14px;
+    font-size: 15px;
     cursor: pointer;
     flex-shrink: 0;
     transition: background 0.15s;
   }
   .pin-row button:hover{background: var(--primary-dark);}
 
-  /* Responsive Table & Container */
+  /* Responsive Table */
   .table-responsive{
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin-top: 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 9px;
     background: var(--surface);
   }
   
@@ -288,7 +278,7 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 13px;
-    min-width: 440px; /* Minimum width so columns remain structured */
+    min-width: 440px;
   }
   
   th, td{
@@ -320,7 +310,7 @@
     border-radius: 12px;
     font-size: 11px;
     font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
     margin-top: 4px;
   }
@@ -344,13 +334,13 @@
   }
   .toolbar button{
     flex: 1 1 auto;
-    min-height: 40px;
+    min-height: 44px;
     padding: 8px 14px;
-    border: 1px solid var(--border);
-    border-radius: 7px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
     background: var(--surface);
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 13.5px;
+    font-weight: 600;
     cursor: pointer;
     color: var(--ink);
     display: inline-flex;
@@ -361,7 +351,6 @@
   }
   .toolbar button:hover{
     background: var(--bg);
-    border-color: #bcc5bf;
   }
 
   /* QR Code Box */
@@ -383,7 +372,6 @@
     text-align: center;
     margin-top: 6px;
     line-height: 1.4;
-    word-break: break-all;
   }
 
   .empty{
@@ -394,18 +382,11 @@
   }
   .hidden{display: none !important;}
 
-  /* Responsive Adjustments */
-  @media (max-width: 480px){
-    body { padding: 12px 10px 48px; }
-    .card { padding: 16px; border-radius: 8px; }
-    .masthead { margin-bottom: 14px; padding-bottom: 10px; }
-    .toolbar button { min-width: calc(50% - 4px); font-size: 12.5px; }
-  }
-
   @media (min-width: 768px){
-    body { padding-top: 40px; }
-    .card { padding: 26px; }
-    .submit-btn:hover { opacity: 0.94; transform: translateY(-1px); }
+    body { padding-top: 36px; }
+    .card { padding: 24px 22px; }
+    .masthead h1 { font-size: 23px; }
+    .submit-btn:hover { opacity: 0.94; }
   }
 </style>
 </head>
@@ -558,7 +539,6 @@ function hideFeedback(){
   document.getElementById('feedback').className = 'feedback';
 }
 
-// Membersihkan format jam internal 1899-12-30T... menjadi format jam simpel manusia (HH:mm WIB)
 function formatCleanTime(val){
   if(!val || val === '-' || val === "''") return '-';
   let str = String(val).trim().replace(/^'+/, '');
