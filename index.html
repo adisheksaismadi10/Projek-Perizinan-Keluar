@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pos Jaga Asrama — Catatan Keluar Masuk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg: #EEF2ED;
+    --surface: #FFFFFF;
+    --ink: #202B28;
+    --ink-soft: #5C6864;
+    --primary: #1F4B4C;
+    --primary-dark: #143332;
+    --accent: #E0982A;
+    --danger: #B5482E;
+    --success: #3E7A5D;
+    --border: #D7DED9;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    min-height:100vh;
+    padding:24px 16px 60px;
+  }
+  .wrap{max-width:500px;margin:0 auto;}
+
+  .masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:2px solid var(--primary);
+    padding-bottom:14px;
+    margin-bottom:20px;
+  }
+  .masthead h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:22px;
+    margin:0;
+    color:var(--primary-dark);
+    line-height:1.15;
+  }
+  .clock{
+    font-family:'IBM Plex Mono',monospace;
+    text-align:right;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  .clock .time{font-size:20px;color:var(--primary-dark);font-weight:500;}
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    padding:22px;
+    margin-bottom:16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+
+  .toggle{
+    display:flex;
+    border:1px solid var(--border);
+    border-radius:8px;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .toggle button{
+    flex:1;
+    padding:13px 0;
+    border:none;
+    background:var(--surface);
+    font-family:'Space Grotesk',sans-serif;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .toggle button.active.keluar{background:var(--danger);color:#fff;}
+  .toggle button.active.masuk{background:var(--success);color:#fff;}
+  .toggle button:not(.active):hover{background:var(--bg);}
+
+  label{
+    display:block;
+    font-size:13px;
+    color:var(--ink-soft);
+    margin:14px 0 6px;
+    font-weight: 500;
+  }
+  label:first-of-type{margin-top:0;}
+  input, textarea, select{
+    width:100%;
+    padding:11px 12px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--ink);
+    background:var(--bg);
+    transition: border-color .15s;
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none;
+    border-color:var(--primary);
+    background:var(--surface);
+  }
+  textarea{resize:vertical;min-height:60px;}
+
+  .submit-btn{
+    width:100%;
+    margin-top:20px;
+    padding:14px 0;
+    border:none;
+    border-radius:8px;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:16px;
+    font-weight:700;
+    color:#fff;
+    cursor:pointer;
+    transition: opacity .15s, background .15s;
+  }
+  .submit-btn.keluar{background:var(--danger);}
+  .submit-btn.masuk{background:var(--success);}
+  .submit-btn:disabled{opacity: 0.6; cursor:not-allowed;}
+
+  .feedback{
+    margin-top:14px;
+    padding:12px 14px;
+    border-radius:7px;
+    font-size:14px;
+    line-height:1.5;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.ok{background:#E4F0E9;color:var(--success);border:1px solid #BFDECB;}
+  .feedback.warn{background:#FBEDE3;color:var(--danger);border:1px solid #F0CDB8;}
+  .feedback.info{background:#EBF3F5;color:var(--primary);border:1px solid #C4DDE2;}
+
+  .admin-link{
+    text-align:center;
+    font-size:13px;
+    color:var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+    margin-top:8px;
+  }
+
+  .pin-row{display:flex;gap:8px;}
+  .pin-row input{flex:1;}
+  .pin-row button{
+    padding:0 18px;
+    border:none;
+    border-radius:7px;
+    background:var(--primary);
+    color:#fff;
+    font-weight:600;
+    cursor:pointer;
+  }
+
+  .table-responsive{
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 10px;
+  }
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;}
+  th{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ink-soft);font-size:11px;text-transform:none;background:var(--bg);}
+  tr:last-child td{border-bottom:none;}
+  .tag{
+    display:inline-block;
+    padding:2px 7px;
+    border-radius:20px;
+    font-size:10.5px;
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .tag.open{background:#FBEDE3;color:var(--danger);}
+  .tag.closed{background:#E4F0E9;color:var(--success);}
+  .tag.warn{background:#FFF3CD;color:#856404;}
+
+  .toolbar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+  .toolbar button, .toolbar a{
+    padding:9px 14px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:var(--surface);
+    font-size:13px;
+    cursor:pointer;
+    color:var(--ink);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+  .toolbar button:hover, .toolbar a:hover{background:var(--bg);}
+
+  #qrbox{display:flex;justify-content:center;padding:12px 0;}
+  .qr-hint{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:6px;line-height: 1.4;}
+
+  .empty{color:var(--ink-soft);font-size:13.5px;text-align:center;padding:16px 0;}
+  .hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <h1>Pos Jaga Asrama<br>Catatan Keluar &amp; Masuk</h1>
+    <div class="clock">
+      <div id="tanggal">—</div>
+      <div class="time" id="jam">--:--</div>
+    </div>
+  </div>
+
+  <!-- FORM UTAMA -->
+  <div class="card" id="formCard">
+    <div class="toggle">
+      <button type="button" class="active keluar" id="btnKeluar">Keluar</button>
+      <button type="button" class="masuk" id="btnMasuk">Masuk</button>
+    </div>
+
+    <form id="logForm">
+      <label for="nama">Nama lengkap</label>
+      <input type="text" id="nama" required placeholder="cth. Siti Rahma">
+
+      <label for="kelas">Kelas</label>
+      <select id="kelas" required>
+        <option value="" disabled selected>Pilih kelas</option>
+        <option value="Dasar">Dasar</option>
+        <option value="Lambatan">Lambatan</option>
+        <option value="Cepatan">Cepatan</option>
+        <option value="Lanjutan">Lanjutan</option>
+      </select>
+
+      <label for="kamar">Nomor kamar</label>
+      <input type="text" id="kamar" required placeholder="cth. B-204">
+
+      <div id="tujuanField">
+        <label for="tujuan">Tujuan / keperluan keluar</label>
+        <textarea id="tujuan" placeholder="cth. Beli makan malam, pulang ke rumah, kuliah malam..."></textarea>
+      </div>
+
+      <button type="submit" class="submit-btn keluar" id="submitBtn">Catat waktu keluar</button>
+    </form>
+
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="admin-link" id="adminToggle">Buka rekap &amp; QR (pengurus asrama)</div>
+
+  <!-- GERBANG PIN -->
+  <div class="card hidden" id="pinCard">
+    <label for="pinInput">Masukkan PIN pengurus</label>
+    <div class="pin-row">
+      <input type="password" id="pinInput" placeholder="PIN">
+      <button type="button" id="pinBtn">Masuk</button>
+    </div>
+    <div class="qr-hint">PIN default: <strong>2468</strong> (dapat diubah di file kode sumber).</div>
+  </div>
+
+  <!-- PANEL ADMIN -->
+  <div class="card hidden" id="adminCard">
+    <label style="margin-top:0">Link Website / QR Code Form</label>
+    <div class="pin-row">
+      <input type="text" id="publicUrl" placeholder="Tempel URL website di sini">
+      <button type="button" id="qrBtn">Perbarui QR</button>
+    </div>
+    <div class="qr-hint">Cetak QR Code ini dan tempel di Pos Jaga agar santri bisa langsung scan lewat HP.</div>
+
+    <div id="qrbox"></div>
+    <div class="qr-hint" id="qrUrlLabel"></div>
+
+    <div class="toolbar">
+      <button type="button" id="reloadBtn">🔄 Muat Ulang Data</button>
+      <button type="button" id="csvBtn">📥 Unduh CSV</button>
+    </div>
+
+    <div class="table-responsive">
+      <div id="rekapWrap"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/**
+ * KONFIGURASI GOOGLE APPS SCRIPT
+ * Ganti URL di bawah ini dengan URL Web App hasil deploy Apps Script Anda.
+ */
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbMRShtx7jkrMwc5jVuInEhqiNAxeaIT4u1guIpg8EDagPjT14YmCR__HzQyciiAoQpw/exec';
+const ADMIN_PIN = '2468';
+
+let mode = 'keluar';
+let lastRecords = [];
+
+function setMode(m){
+  mode = m;
+  document.getElementById('btnKeluar').classList.toggle('active', m==='keluar');
+  document.getElementById('btnMasuk').classList.toggle('active', m==='masuk');
+  document.getElementById('tujuanField').style.display = m==='keluar' ? 'block' : 'none';
+  document.getElementById('tujuan').required = (m==='keluar');
+  const btn = document.getElementById('submitBtn');
+  btn.className = 'submit-btn ' + m;
+  btn.textContent = m==='keluar' ? 'Catat waktu keluar' : 'Catat waktu masuk';
+  hideFeedback();
+}
+
+function nowParts(){
+  const d = new Date();
+  const tanggal = d.toLocaleDateString('id-ID', {timeZone:'Asia/Jakarta', weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const jam = d.toLocaleTimeString('id-ID', {timeZone:'Asia/Jakarta', hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  return {d, tanggal, jam};
+}
+
+function tickClock(){
+  const {tanggal, jam} = nowParts();
+  document.getElementById('tanggal').textContent = tanggal;
+  document.getElementById('jam').textContent = jam;
+}
+
+function showFeedback(msg, type){
+  const el = document.getElementById('feedback');
+  el.textContent = msg;
+  el.className = 'feedback show ' + type;
+}
+function hideFeedback(){
+  document.getElementById('feedback').className = 'feedback';
+}
+
+async function handleSubmit(e){
+  e.preventDefault();
+  const nama = document.getElementById('nama').value.trim();
+  const kelas = document.getElementById('kelas').value;
+  const kamar = document.getElementById('kamar').value.trim();
+  const tujuan = document.getElementById('tujuan').value.trim();
+  const btn = document.getElementById('submitBtn');
+
+  if(!nama || !kelas || !kamar || (mode==='keluar' && !tujuan)){
+    showFeedback('Mohon lengkapi semua kolom terlebih dahulu.', 'warn');
+    return;
+  }
+
+  if(SCRIPT_URL === 'PASTE_URL_WEB_APP_ANDA_DI_SINI' || !SCRIPT_URL.startsWith('http')){
+    showFeedback('Backend belum terhubung! Silakan pasang Google Apps Script dan masukkan SCRIPT_URL di dalam file index.html.', 'warn');
+    return;
+  }
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Menyimpan ke Spreadsheet...';
+  showFeedback('Sedang mengirim data ke Google Sheets...', 'info');
+
+  try{
+    const payload = {
+      mode: mode,
+      data: { nama, kelas, kamar, tujuan }
+    };
+
+    // Kirim data ke Google Apps Script Web App
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+
+    const result = await response.json();
+    if(result.status === 'success'){
+      showFeedback(result.message, 'ok');
+      document.getElementById('logForm').reset();
+      // Set kembali default placeholder/dropdown
+      document.getElementById('kelas').selectedIndex = 0;
+    } else {
+      showFeedback('Terjadi kesalahan: ' + (result.message || 'Gagal menyimpan.'), 'warn');
+    }
+  } catch(err){
+    console.error(err);
+    showFeedback('Gagal menghubungi Google Sheets. Periksa koneksi internet atau URL script.', 'warn');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+function toggleAdmin(){
+  const pinCard = document.getElementById('pinCard');
+  const adminCard = document.getElementById('adminCard');
+  if(!adminCard.classList.contains('hidden') || !pinCard.classList.contains('hidden')){
+    pinCard.classList.add('hidden');
+    adminCard.classList.add('hidden');
+    document.getElementById('adminToggle').textContent = 'Buka rekap & QR (pengurus asrama)';
+  } else {
+    pinCard.classList.remove('hidden');
+    document.getElementById('adminToggle').textContent = 'Tutup panel pengurus';
+  }
+}
+
+function checkPin(){
+  const val = document.getElementById('pinInput').value;
+  if(val === ADMIN_PIN){
+    document.getElementById('pinCard').classList.add('hidden');
+    document.getElementById('adminCard').classList.remove('hidden');
+    initAdminPanel();
+  } else {
+    document.getElementById('pinInput').style.outline = '2px solid var(--danger)';
+    document.getElementById('pinInput').value = '';
+    alert('PIN salah!');
+  }
+}
+
+function initAdminPanel(){
+  const currentUrl = window.location.href;
+  const publicInput = document.getElementById('publicUrl');
+  if(!publicInput.value){
+    publicInput.value = currentUrl;
+  }
+  renderQr();
+  loadRekap();
+}
+
+function renderQr(){
+  const url = document.getElementById('publicUrl').value.trim();
+  const box = document.getElementById('qrbox');
+  const label = document.getElementById('qrUrlLabel');
+  box.innerHTML = '';
+  if(!url){
+    label.textContent = 'Tempel link publik dulu, lalu klik "Perbarui QR".';
+    return;
+  }
+  if(typeof QRCode === 'undefined'){
+    label.textContent = 'Gagal memuat pustaka QR.';
+    return;
+  }
+  new QRCode(box, { text: url, width: 180, height: 180, colorDark: '#1F4B4C', colorLight: '#FFFFFF' });
+  label.textContent = url;
+}
+
+async function loadRekap(){
+  const wrap = document.getElementById('rekapWrap');
+  wrap.innerHTML = '<div class="empty">Memuat data dari Google Sheets…</div>';
+  
+  if(SCRIPT_URL === 'PASTE_URL_WEB_APP_ANDA_DI_SINI' || !SCRIPT_URL.startsWith('http')){
+    wrap.innerHTML = '<div class="empty" style="color:var(--danger)">Google Apps Script URL belum dipasang.</div>';
+    return;
+  }
+
+  try{
+    const response = await fetch(SCRIPT_URL);
+    const result = await response.json();
+    
+    if(result.status === 'success'){
+      lastRecords = result.data || [];
+      renderTable(lastRecords);
+    } else {
+      wrap.innerHTML = '<div class="empty">Gagal memuat data: ' + (result.message || '') + '</div>';
+    }
+  } catch(err){
+    console.error(err);
+    wrap.innerHTML = '<div class="empty">Gagal memuat data. Periksa koneksi atau izin Web App.</div>';
+  }
+}
+
+function renderTable(records){
+  const wrap = document.getElementById('rekapWrap');
+  if(records.length === 0){
+    wrap.innerHTML = '<div class="empty">Belum ada catatan perizinan di Spreadsheet.</div>';
+    return;
+  }
+  let rows = records.map(r => `
+    <tr>
+      <td>
+        <strong>${escapeHtml(r.nama)}</strong><br>
+        <span style="color:var(--ink-soft)">${escapeHtml(r.kelas||'-')} · Kamar ${escapeHtml(r.kamar||'-')}</span>
+      </td>
+      <td>${escapeHtml(r.tujuan || '-')}</td>
+      <td>${escapeHtml(r.jamKeluar || '-')}</td>
+      <td>
+        ${r.jamMasuk ? escapeHtml(r.jamMasuk) : ''}
+        ${r.status === 'Belum Kembali' 
+          ? '<span class="tag open">Belum Kembali</span>' 
+          : r.status === 'Tanpa Izin Keluar' 
+            ? '<span class="tag warn">Tanpa Izin</span>' 
+            : `<br><span class="tag closed">${escapeHtml(r.durasi || 'Selesai')}</span>`
+        }
+      </td>
+    </tr>
+  `).join('');
+  
+  wrap.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Santri</th>
+          <th>Tujuan</th>
+          <th>Keluar</th>
+          <th>Masuk / Status</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+  `;
+}
+
+function escapeHtml(text) {
+  if (!text) return '';
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function exportCsv(){
+  if(!lastRecords.length){ 
+    alert('Belum ada data untuk diunduh.');
+    return; 
+  }
+  const header = ['ID', 'Tanggal', 'Nama', 'Kelas', 'Kamar', 'Tujuan', 'Jam Keluar', 'Jam Masuk', 'Durasi', 'Status'];
+  const rows = lastRecords.map(r => [
+    r.id || '',
+    r.tanggal || '',
+    r.nama || '', 
+    r.kelas || '', 
+    r.kamar || '',
+    (r.tujuan || '').replace(/[\r\n,]+/g,' '),
+    r.jamKeluar || '',
+    r.jamMasuk || '',
+    r.durasi || '',
+    r.status || ''
+  ]);
+  const csv = [header, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `rekap-asrama-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Event Listeners
+document.getElementById('btnKeluar').addEventListener('click', () => setMode('keluar'));
+document.getElementById('btnMasuk').addEventListener('click', () => setMode('masuk'));
+document.getElementById('logForm').addEventListener('submit', handleSubmit);
+document.getElementById('adminToggle').addEventListener('click', toggleAdmin);
+document.getElementById('pinBtn').addEventListener('click', checkPin);
+document.getElementById('pinInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') checkPin(); });
+document.getElementById('qrBtn').addEventListener('click', renderQr);
+document.getElementById('reloadBtn').addEventListener('click', loadRekap);
+document.getElementById('csvBtn').addEventListener('click', exportCsv);
+
+setMode('keluar');
+tickClock();
+setInterval(tickClock, 1000);
+</script>
+</body>
+</html>
