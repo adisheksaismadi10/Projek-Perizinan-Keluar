@@ -2,10 +2,10 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
 <title>Pos Jaga Asrama — Catatan Keluar Masuk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
   :root{
@@ -19,200 +19,404 @@
     --danger: #B5482E;
     --success: #3E7A5D;
     --border: #D7DED9;
+    --radius: 10px;
+    --shadow: 0 3px 12px rgba(0,0,0,0.04), 0 1px 3px rgba(0,0,0,0.02);
   }
-  *{box-sizing:border-box;}
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
   body{
-    margin:0;
-    background:var(--bg);
-    font-family:'Inter',system-ui,sans-serif;
-    color:var(--ink);
-    min-height:100vh;
-    padding:24px 16px 60px;
+    background: var(--bg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+    padding: max(16px, 3vh) max(12px, 3vw) 60px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap{max-width:500px;margin:0 auto;}
 
+  /* Responsive Wrapper that scales gracefully */
+  .wrap{
+    width: 100%;
+    max-width: 520px;
+    transition: max-width 0.25s ease;
+  }
+
+  .wrap.wide{
+    max-width: 760px;
+  }
+
+  /* Masthead Header */
   .masthead{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    border-bottom:2px solid var(--primary);
-    padding-bottom:14px;
-    margin-bottom:20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 2px solid var(--primary);
+    padding-bottom: 12px;
+    margin-bottom: 18px;
+    gap: 12px;
+    flex-wrap: wrap;
   }
+
   .masthead h1{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:22px;
-    margin:0;
-    color:var(--primary-dark);
-    line-height:1.15;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(1.15rem, 4vw, 1.4rem);
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.2;
+    flex: 1 1 200px;
   }
+
   .clock{
-    font-family:'IBM Plex Mono',monospace;
-    text-align:right;
-    color:var(--ink-soft);
-    font-size:13px;
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: right;
+    color: var(--ink-soft);
+    font-size: clamp(11px, 2.5vw, 12.5px);
+    flex-shrink: 0;
   }
-  .clock .time{font-size:20px;color:var(--primary-dark);font-weight:500;}
+  .clock .time{
+    font-size: clamp(16px, 4vw, 20px);
+    color: var(--primary-dark);
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
 
+  /* Cards */
   .card{
-    background:var(--surface);
-    border:1px solid var(--border);
-    border-radius:10px;
-    padding:22px;
-    margin-bottom:16px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: clamp(16px, 4vw, 24px);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
   }
 
+  /* Mode Switch Toggle */
   .toggle{
-    display:flex;
-    border:1px solid var(--border);
-    border-radius:8px;
-    overflow:hidden;
-    margin-bottom:20px;
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    background: var(--bg);
+    padding: 3px;
+    gap: 4px;
   }
   .toggle button{
-    flex:1;
-    padding:13px 0;
-    border:none;
-    background:var(--surface);
-    font-family:'Space Grotesk',sans-serif;
-    font-size:15px;
-    font-weight:700;
-    color:var(--ink-soft);
-    cursor:pointer;
-    transition:background .15s ease, color .15s ease;
+    flex: 1;
+    min-height: 44px;
+    padding: 10px 4px;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(14px, 3.5vw, 15.5px);
+    font-weight: 700;
+    color: var(--ink-soft);
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
   }
-  .toggle button.active.keluar{background:var(--danger);color:#fff;}
-  .toggle button.active.masuk{background:var(--success);color:#fff;}
-  .toggle button:not(.active):hover{background:var(--bg);}
+  .toggle button.active.keluar{
+    background: var(--danger);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(181, 72, 46, 0.3);
+  }
+  .toggle button.active.masuk{
+    background: var(--success);
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(62, 122, 93, 0.3);
+  }
+  .toggle button:not(.active):hover{
+    background: rgba(0,0,0,0.04);
+    color: var(--ink);
+  }
 
+  /* Form Elements */
   label{
-    display:block;
-    font-size:13px;
-    color:var(--ink-soft);
-    margin:14px 0 6px;
-    font-weight: 500;
+    display: block;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 14px 0 6px;
+    font-weight: 600;
   }
-  label:first-of-type{margin-top:0;}
+  label:first-of-type{margin-top: 0;}
+
   input, textarea, select{
-    width:100%;
-    padding:11px 12px;
-    border:1px solid var(--border);
-    border-radius:7px;
-    font-size:15px;
-    font-family:inherit;
-    color:var(--ink);
-    background:var(--bg);
-    transition: border-color .15s;
+    width: 100%;
+    min-height: 44px; /* iOS standard touch target */
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on iOS */
+    font-family: inherit;
+    color: var(--ink);
+    background: var(--bg);
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    -webkit-appearance: none;
+    appearance: none;
   }
+
+  /* Custom dropdown arrow for selects */
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235C6864' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 36px;
+  }
+
   input:focus, textarea:focus, select:focus{
-    outline:none;
-    border-color:var(--primary);
-    background:var(--surface);
+    outline: none;
+    border-color: var(--primary);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(31, 75, 76, 0.12);
   }
-  textarea{resize:vertical;min-height:60px;}
+  textarea{
+    resize: vertical;
+    min-height: 72px;
+    line-height: 1.4;
+  }
 
+  /* Submit Button */
   .submit-btn{
-    width:100%;
-    margin-top:20px;
-    padding:14px 0;
-    border:none;
-    border-radius:8px;
-    font-family:'Space Grotesk',sans-serif;
-    font-size:16px;
-    font-weight:700;
-    color:#fff;
-    cursor:pointer;
-    transition: opacity .15s, background .15s;
+    width: 100%;
+    margin-top: 22px;
+    min-height: 48px;
+    padding: 12px 16px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(15px, 3.5vw, 16.5px);
+    font-weight: 700;
+    color: #fff;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
   }
-  .submit-btn.keluar{background:var(--danger);}
-  .submit-btn.masuk{background:var(--success);}
-  .submit-btn:disabled{opacity: 0.6; cursor:not-allowed;}
+  .submit-btn:active{transform: scale(0.99);}
+  .submit-btn.keluar{
+    background: var(--danger);
+    box-shadow: 0 3px 10px rgba(181, 72, 46, 0.25);
+  }
+  .submit-btn.masuk{
+    background: var(--success);
+    box-shadow: 0 3px 10px rgba(62, 122, 93, 0.25);
+  }
+  .submit-btn:disabled{
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
 
+  /* Feedback Alerts */
   .feedback{
-    margin-top:14px;
-    padding:12px 14px;
-    border-radius:7px;
-    font-size:14px;
-    line-height:1.5;
-    display:none;
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+    animation: fadeIn 0.2s ease;
   }
-  .feedback.show{display:block;}
-  .feedback.ok{background:#E4F0E9;color:var(--success);border:1px solid #BFDECB;}
-  .feedback.warn{background:#FBEDE3;color:var(--danger);border:1px solid #F0CDB8;}
-  .feedback.info{background:#EBF3F5;color:var(--primary);border:1px solid #C4DDE2;}
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .feedback.show{display: block;}
+  .feedback.ok{background: #E4F0E9; color: var(--success); border: 1px solid #BFDECB;}
+  .feedback.warn{background: #FBEDE3; color: var(--danger); border: 1px solid #F0CDB8;}
+  .feedback.info{background: #EBF3F5; color: var(--primary); border: 1px solid #C4DDE2;}
 
   .admin-link{
-    text-align:center;
-    font-size:13px;
-    color:var(--ink-soft);
-    text-decoration:underline;
-    cursor:pointer;
-    margin-top:8px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 12px;
+    padding: 6px;
+    transition: color 0.15s;
+    user-select: none;
   }
+  .admin-link:hover{color: var(--primary);}
 
-  .pin-row{display:flex;gap:8px;}
-  .pin-row input{flex:1;}
+  /* PIN Row */
+  .pin-row{
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .pin-row input{flex: 1;}
   .pin-row button{
-    padding:0 18px;
-    border:none;
-    border-radius:7px;
-    background:var(--primary);
-    color:#fff;
-    font-weight:600;
-    cursor:pointer;
+    padding: 0 clamp(14px, 3vw, 20px);
+    min-height: 44px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
   }
+  .pin-row button:hover{background: var(--primary-dark);}
 
+  /* Responsive Table & Container */
   .table-responsive{
     width: 100%;
     overflow-x: auto;
-    margin-top: 10px;
+    -webkit-overflow-scrolling: touch;
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
   }
-  table{width:100%;border-collapse:collapse;font-size:12.5px;}
-  th,td{padding:8px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;}
-  th{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--ink-soft);font-size:11px;text-transform:none;background:var(--bg);}
-  tr:last-child td{border-bottom:none;}
-  .tag{
-    display:inline-block;
-    padding:2px 7px;
-    border-radius:20px;
-    font-size:10.5px;
-    font-family:'IBM Plex Mono',monospace;
+  
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 440px; /* Minimum width so columns remain structured */
   }
-  .tag.open{background:#FBEDE3;color:var(--danger);}
-  .tag.closed{background:#E4F0E9;color:var(--success);}
-  .tag.warn{background:#FFF3CD;color:#856404;}
+  
+  th, td{
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+  }
+  
+  th{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    color: var(--ink-soft);
+    font-size: 11.5px;
+    background: var(--bg);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  tr:last-child td{border-bottom: none;}
+  tr:hover td{background: rgba(0,0,0,0.015);}
 
-  .toolbar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
-  .toolbar button, .toolbar a{
-    padding:9px 14px;
-    border:1px solid var(--border);
-    border-radius:7px;
-    background:var(--surface);
-    font-size:13px;
-    cursor:pointer;
-    color:var(--ink);
-    text-decoration: none;
+  .tag{
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-top: 4px;
+  }
+  .tag.open{background: #FBEDE3; color: var(--danger);}
+  .tag.closed{background: #E4F0E9; color: var(--success);}
+  .tag.warn{background: #FFF3CD; color: #856404;}
+
+  .date-sub{
+    font-size: 11px;
+    color: var(--ink-soft);
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* Admin Toolbar */
+  .toolbar{
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .toolbar button{
+    flex: 1 1 auto;
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--ink);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s;
   }
-  .toolbar button:hover, .toolbar a:hover{background:var(--bg);}
+  .toolbar button:hover{
+    background: var(--bg);
+    border-color: #bcc5bf;
+  }
 
-  #qrbox{display:flex;justify-content:center;padding:12px 0;}
-  .qr-hint{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:6px;line-height: 1.4;}
+  /* QR Code Box */
+  #qrbox{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px 0 8px;
+  }
+  #qrbox img, #qrbox canvas {
+    max-width: 100%;
+    height: auto !important;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .qr-hint{
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-align: center;
+    margin-top: 6px;
+    line-height: 1.4;
+    word-break: break-all;
+  }
 
-  .empty{color:var(--ink-soft);font-size:13.5px;text-align:center;padding:16px 0;}
-  .hidden{display:none;}
+  .empty{
+    color: var(--ink-soft);
+    font-size: 13.5px;
+    text-align: center;
+    padding: 24px 16px;
+  }
+  .hidden{display: none !important;}
+
+  /* Responsive Adjustments */
+  @media (max-width: 480px){
+    body { padding: 12px 10px 48px; }
+    .card { padding: 16px; border-radius: 8px; }
+    .masthead { margin-bottom: 14px; padding-bottom: 10px; }
+    .toolbar button { min-width: calc(50% - 4px); font-size: 12.5px; }
+  }
+
+  @media (min-width: 768px){
+    body { padding-top: 40px; }
+    .card { padding: 26px; }
+    .submit-btn:hover { opacity: 0.94; transform: translateY(-1px); }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" id="mainWrap">
 
   <div class="masthead">
     <h1>Pos Jaga Asrama<br>Catatan Keluar &amp; Masuk</h1>
     <div class="clock">
       <div id="tanggal">—</div>
-      <div class="time" id="jam">--:--</div>
+      <div class="time" id="jam">--:-- WIB</div>
     </div>
   </div>
 
@@ -225,7 +429,7 @@
 
     <form id="logForm">
       <label for="nama">Nama lengkap</label>
-      <input type="text" id="nama" required placeholder="cth. Siti Rahma">
+      <input type="text" id="nama" required placeholder="cth. Siti Rahma" autocomplete="name">
 
       <label for="kelas">Kelas</label>
       <select id="kelas" required>
@@ -256,7 +460,9 @@
         <textarea id="tujuan" placeholder="cth. Beli makan malam, pulang ke rumah, kuliah malam..."></textarea>
       </div>
 
-      <button type="submit" class="submit-btn keluar" id="submitBtn">Catat waktu keluar</button>
+      <button type="submit" class="submit-btn keluar" id="submitBtn">
+        <span>Catat waktu keluar</span>
+      </button>
     </form>
 
     <div class="feedback" id="feedback"></div>
@@ -268,7 +474,7 @@
   <div class="card hidden" id="pinCard">
     <label for="pinInput">Masukkan PIN pengurus</label>
     <div class="pin-row">
-      <input type="password" id="pinInput" placeholder="PIN">
+      <input type="password" id="pinInput" placeholder="Masukkan PIN pengurus" inputmode="numeric">
       <button type="button" id="pinBtn">Masuk</button>
     </div>
   </div>
@@ -286,8 +492,9 @@
     <div class="qr-hint" id="qrUrlLabel"></div>
 
     <div class="toolbar">
-      <button type="button" id="reloadBtn">🔄 Muat Ulang Data</button>
+      <button type="button" id="reloadBtn">🔄 Muat Ulang</button>
       <button type="button" id="csvBtn">📥 Unduh CSV</button>
+      <button type="button" id="logoutBtn" style="color:var(--danger)">🔒 Kunci</button>
     </div>
 
     <div class="table-responsive">
@@ -300,7 +507,6 @@
 <script>
 /**
  * KONFIGURASI GOOGLE APPS SCRIPT
- * Ganti URL di bawah ini dengan URL Web App hasil deploy Apps Script Anda.
  */
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbMRShtx7jkrMwc5jVuInEhqiNAxeaIT4u1guIpg8EDagPjT14YmCR__HzQyciiAoQpw/exec';
 const ADMIN_PIN = '2468';
@@ -316,15 +522,25 @@ function setMode(m){
   document.getElementById('tujuan').required = (m==='keluar');
   const btn = document.getElementById('submitBtn');
   btn.className = 'submit-btn ' + m;
-  btn.textContent = m==='keluar' ? 'Catat waktu keluar' : 'Catat waktu masuk';
+  btn.querySelector('span').textContent = m==='keluar' ? 'Catat waktu keluar' : 'Catat waktu masuk';
   hideFeedback();
 }
 
 function nowParts(){
   const d = new Date();
-  const tanggal = d.toLocaleDateString('id-ID', {timeZone:'Asia/Jakarta', weekday:'long', day:'numeric', month:'long', year:'numeric'});
-  const jam = d.toLocaleTimeString('id-ID', {timeZone:'Asia/Jakarta', hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  return {d, tanggal, jam};
+  const tanggal = d.toLocaleDateString('id-ID', {
+    timeZone: 'Asia/Jakarta', 
+    weekday: 'long', 
+    day: 'numeric', 
+    month: 'short', 
+    year: 'numeric'
+  });
+  const jam = d.toLocaleTimeString('id-ID', {
+    timeZone: 'Asia/Jakarta', 
+    hour: '2-digit', 
+    minute: '2-digit'
+  }).replace('.', ':');
+  return { tanggal, jam: `${jam} WIB` };
 }
 
 function tickClock(){
@@ -342,6 +558,47 @@ function hideFeedback(){
   document.getElementById('feedback').className = 'feedback';
 }
 
+// Membersihkan format jam internal 1899-12-30T... menjadi format jam simpel manusia (HH:mm WIB)
+function formatCleanTime(val){
+  if(!val || val === '-' || val === "''") return '-';
+  let str = String(val).trim().replace(/^'+/, '');
+  
+  if(str.includes('T') && (str.endsWith('Z') || str.includes('+') || str.includes('1899-'))){
+    try {
+      const d = new Date(str);
+      if(!isNaN(d.getTime())){
+        const h = String(d.getHours()).padStart(2, '0');
+        const m = String(d.getMinutes()).padStart(2, '0');
+        return `${h}:${m} WIB`;
+      }
+    } catch(e){}
+  }
+  
+  if(/^\d{1,2}:\d{2}:\d{2}/.test(str)){
+    return str.substring(0, 5) + ' WIB';
+  }
+  if(/^\d{1,2}:\d{2}$/.test(str)){
+    return str + ' WIB';
+  }
+  
+  return str;
+}
+
+function formatCleanDate(val){
+  if(!val || val === '-' || val === "''") return '';
+  let str = String(val).trim().replace(/^'+/, '');
+  if(str.includes('T') && str.endsWith('Z')){
+    try {
+      const d = new Date(str);
+      if(!isNaN(d.getTime()) && d.getFullYear() > 1900){
+        return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+      return '';
+    } catch(e){}
+  }
+  return str;
+}
+
 async function handleSubmit(e){
   e.preventDefault();
   const nama = document.getElementById('nama').value.trim();
@@ -349,6 +606,7 @@ async function handleSubmit(e){
   const kamar = document.getElementById('kamar').value.trim();
   const tujuan = document.getElementById('tujuan').value.trim();
   const btn = document.getElementById('submitBtn');
+  const span = btn.querySelector('span');
 
   if(!nama || !kelas || !kamar || (mode==='keluar' && !tujuan)){
     showFeedback('Mohon lengkapi semua kolom terlebih dahulu.', 'warn');
@@ -361,8 +619,8 @@ async function handleSubmit(e){
   }
 
   btn.disabled = true;
-  const originalText = btn.textContent;
-  btn.textContent = 'Menyimpan ke Spreadsheet...';
+  const originalText = span.textContent;
+  span.textContent = 'Menyimpan ke Spreadsheet...';
   showFeedback('Sedang mengirim data ke Google Sheets...', 'info');
 
   try{
@@ -371,7 +629,6 @@ async function handleSubmit(e){
       data: { nama, kelas, kamar, tujuan }
     };
 
-    // Kirim data ke Google Apps Script Web App
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify(payload)
@@ -381,9 +638,9 @@ async function handleSubmit(e){
     if(result.status === 'success'){
       showFeedback(result.message, 'ok');
       document.getElementById('logForm').reset();
-      // Set kembali default placeholder/dropdown
       document.getElementById('kelas').selectedIndex = 0;
       document.getElementById('kamar').selectedIndex = 0;
+      loadRekap();
     } else {
       showFeedback('Terjadi kesalahan: ' + (result.message || 'Gagal menyimpan.'), 'warn');
     }
@@ -392,16 +649,19 @@ async function handleSubmit(e){
     showFeedback('Gagal menghubungi Google Sheets. Periksa koneksi internet atau URL script.', 'warn');
   } finally {
     btn.disabled = false;
-    btn.textContent = originalText;
+    span.textContent = originalText;
   }
 }
 
 function toggleAdmin(){
   const pinCard = document.getElementById('pinCard');
   const adminCard = document.getElementById('adminCard');
+  const wrap = document.getElementById('mainWrap');
+
   if(!adminCard.classList.contains('hidden') || !pinCard.classList.contains('hidden')){
     pinCard.classList.add('hidden');
     adminCard.classList.add('hidden');
+    wrap.classList.remove('wide');
     document.getElementById('adminToggle').textContent = 'Buka rekap & QR (pengurus asrama)';
   } else {
     pinCard.classList.remove('hidden');
@@ -410,16 +670,26 @@ function toggleAdmin(){
 }
 
 function checkPin(){
-  const val = document.getElementById('pinInput').value;
+  const val = document.getElementById('pinInput').value.trim();
+  const wrap = document.getElementById('mainWrap');
+
   if(val === ADMIN_PIN){
     document.getElementById('pinCard').classList.add('hidden');
     document.getElementById('adminCard').classList.remove('hidden');
+    wrap.classList.add('wide');
+    document.getElementById('pinInput').value = '';
     initAdminPanel();
   } else {
     document.getElementById('pinInput').style.outline = '2px solid var(--danger)';
     document.getElementById('pinInput').value = '';
     alert('PIN salah!');
   }
+}
+
+function lockAdminPanel(){
+  document.getElementById('adminCard').classList.add('hidden');
+  document.getElementById('pinCard').classList.remove('hidden');
+  document.getElementById('mainWrap').classList.remove('wide');
 }
 
 function initAdminPanel(){
@@ -451,6 +721,7 @@ function renderQr(){
 
 async function loadRekap(){
   const wrap = document.getElementById('rekapWrap');
+  if(!wrap) return;
   wrap.innerHTML = '<div class="empty">Memuat data dari Google Sheets…</div>';
   
   if(SCRIPT_URL === 'PASTE_URL_WEB_APP_ANDA_DI_SINI' || !SCRIPT_URL.startsWith('http')){
@@ -480,25 +751,34 @@ function renderTable(records){
     wrap.innerHTML = '<div class="empty">Belum ada catatan perizinan di Spreadsheet.</div>';
     return;
   }
-  let rows = records.map(r => `
-    <tr>
-      <td>
-        <strong>${escapeHtml(r.nama)}</strong><br>
-        <span style="color:var(--ink-soft)">${escapeHtml(r.kelas||'-')} · Kamar ${escapeHtml(r.kamar||'-')}</span>
-      </td>
-      <td>${escapeHtml(r.tujuan || '-')}</td>
-      <td>${escapeHtml(r.jamKeluar || '-')}</td>
-      <td>
-        ${r.jamMasuk ? escapeHtml(r.jamMasuk) : ''}
-        ${r.status === 'Belum Kembali' 
-          ? '<span class="tag open">Belum Kembali</span>' 
-          : r.status === 'Tanpa Izin Keluar' 
-            ? '<span class="tag warn">Tanpa Izin</span>' 
-            : `<br><span class="tag closed">${escapeHtml(r.durasi || 'Selesai')}</span>`
-        }
-      </td>
-    </tr>
-  `).join('');
+  let rows = records.map(r => {
+    const jamKeluarDisplay = formatCleanTime(r.jamKeluar);
+    const jamMasukDisplay = formatCleanTime(r.jamMasuk);
+    const tanggalDisplay = formatCleanDate(r.tanggal);
+
+    return `
+      <tr>
+        <td>
+          <strong>${escapeHtml(r.nama)}</strong><br>
+          <span style="color:var(--ink-soft)">${escapeHtml(r.kelas||'-')} · Kamar ${escapeHtml(r.kamar||'-')}</span>
+        </td>
+        <td>${escapeHtml(r.tujuan || '-')}</td>
+        <td>
+          ${escapeHtml(jamKeluarDisplay)}
+          ${tanggalDisplay ? `<span class="date-sub">${escapeHtml(tanggalDisplay)}</span>` : ''}
+        </td>
+        <td>
+          ${jamMasukDisplay !== '-' ? `<strong>${escapeHtml(jamMasukDisplay)}</strong>` : ''}
+          ${r.status === 'Belum Kembali' 
+            ? '<br><span class="tag open">Belum Kembali</span>' 
+            : r.status === 'Tanpa Izin Keluar' 
+              ? '<br><span class="tag warn">Tanpa Izin</span>' 
+              : (r.durasi && r.durasi !== '-' ? `<br><span class="tag closed">⏱ ${escapeHtml(r.durasi)}</span>` : (jamMasukDisplay !== '-' ? '<br><span class="tag closed">Kembali</span>' : ''))
+          }
+        </td>
+      </tr>
+    `;
+  }).join('');
   
   wrap.innerHTML = `
     <table>
@@ -507,7 +787,7 @@ function renderTable(records){
           <th>Santri</th>
           <th>Tujuan</th>
           <th>Keluar</th>
-          <th>Masuk / Status</th>
+          <th>Masuk &amp; Status</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -533,13 +813,13 @@ function exportCsv(){
   const header = ['ID', 'Tanggal', 'Nama', 'Kelas', 'Kamar', 'Tujuan', 'Jam Keluar', 'Jam Masuk', 'Durasi', 'Status'];
   const rows = lastRecords.map(r => [
     r.id || '',
-    r.tanggal || '',
+    formatCleanDate(r.tanggal) || '',
     r.nama || '', 
     r.kelas || '', 
     r.kamar || '',
     (r.tujuan || '').replace(/[\r\n,]+/g,' '),
-    r.jamKeluar || '',
-    r.jamMasuk || '',
+    formatCleanTime(r.jamKeluar) || '',
+    formatCleanTime(r.jamMasuk) || '',
     r.durasi || '',
     r.status || ''
   ]);
@@ -563,6 +843,7 @@ document.getElementById('pinInput').addEventListener('keydown', (e) => { if(e.ke
 document.getElementById('qrBtn').addEventListener('click', renderQr);
 document.getElementById('reloadBtn').addEventListener('click', loadRekap);
 document.getElementById('csvBtn').addEventListener('click', exportCsv);
+document.getElementById('logoutBtn').addEventListener('click', lockAdminPanel);
 
 setMode('keluar');
 tickClock();
