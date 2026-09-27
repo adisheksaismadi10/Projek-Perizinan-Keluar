@@ -140,7 +140,7 @@
   }
   label:first-of-type{margin-top: 0;}
 
-  input, textarea, select{
+  input, textarea{
     width: 100%;
     min-height: 48px;
     padding: 12px 14px;
@@ -155,15 +155,7 @@
     appearance: none;
   }
 
-  select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%2355635F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-    background-size: 16px;
-    padding-right: 40px;
-  }
-
-  input:focus, textarea:focus, select:focus{
+  input:focus, textarea:focus{
     outline: none;
     border-color: var(--primary);
     background: var(--surface);
@@ -187,6 +179,92 @@
     background: #E4ECE8;
     padding: 2px 6px;
     border-radius: 4px;
+  }
+
+  /* Searchable Autocomplete Box */
+  .autocomplete-wrap{
+    position: relative;
+  }
+  .search-box{
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-box input{
+    padding-right: 42px;
+  }
+  .btn-clear-search{
+    position: absolute;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 50%;
+    background: #DCE3DF;
+    color: #4A5652;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease;
+  }
+  .btn-clear-search:hover{
+    background: #CBD5D0;
+    color: var(--ink);
+  }
+
+  .dropdown-results{
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--surface);
+    border: 1.5px solid var(--primary);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    z-index: 100;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dropdown-item{
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.12s ease;
+  }
+  .dropdown-item:last-child{
+    border-bottom: none;
+  }
+  .dropdown-item:hover, .dropdown-item:active{
+    background: #EAF2EE;
+  }
+  .dropdown-item strong{
+    font-size: 14.5px;
+    color: var(--ink);
+  }
+  .dropdown-item span{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    background: var(--bg);
+    padding: 2px 7px;
+    border-radius: 5px;
+    white-space: nowrap;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+  }
+  .dropdown-empty{
+    padding: 16px 14px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    line-height: 1.4;
   }
 
   textarea{
@@ -229,11 +307,13 @@
   }
 
   /* Active List in Mode Masuk */
+  .search-masuk-box{
+    margin-bottom: 12px;
+  }
   .active-list{
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 10px;
   }
   .active-item{
     display: flex;
@@ -243,6 +323,7 @@
     background: var(--bg);
     border: 1.5px solid var(--border);
     border-radius: 10px;
+    gap: 8px;
     transition: border-color 0.15s ease;
   }
   .active-item:hover{
@@ -481,10 +562,14 @@
 
     <!-- FORM MODE KELUAR -->
     <form id="formKeluar">
-      <label for="santriSelectKeluar">Nama santri</label>
-      <select id="santriSelectKeluar" required>
-        <option value="" disabled selected>Pilih nama Anda...</option>
-      </select>
+      <div class="autocomplete-wrap">
+        <label for="santriSearchInput">Nama santri (Ketik untuk mencari)</label>
+        <div class="search-box">
+          <input type="text" id="santriSearchInput" placeholder="Ketik nama Anda (cth. Zaki / Adis)..." autocomplete="off" required>
+          <button type="button" id="btnClearSantri" class="btn-clear-search hidden" title="Hapus">&times;</button>
+        </div>
+        <div id="santriDropdownList" class="dropdown-results hidden"></div>
+      </div>
 
       <label for="kelasKeluar">Kelas <span class="readonly-badge">Otomatis</span></label>
       <input type="text" id="kelasKeluar" readonly placeholder="Terisi otomatis saat nama dipilih">
@@ -503,6 +588,9 @@
     <!-- FORM MODE MASUK (HANYA MUNCUL KELUAR DI HARI YANG SAMA) -->
     <div id="sectionMasuk" class="hidden">
       <label style="margin-top:0">Santri yang sedang di luar hari ini:</label>
+      <div class="search-masuk-box">
+        <input type="text" id="searchMasukInput" placeholder="🔍 Cari nama Anda di daftar ini...">
+      </div>
       <div id="activeListWrap" class="active-list">
         <div class="empty">Memuat daftar santri di luar...</div>
       </div>
@@ -660,36 +748,80 @@ let masterSantri = [
 let mode = 'keluar';
 let activeKeluarHariIni = [];
 let lastRecords = [];
+let selectedSantri = null;
 
-function populateSantriDropdown(){
-  const sel = document.getElementById('santriSelectKeluar');
-  sel.innerHTML = '<option value="" disabled selected>Pilih nama Anda...</option>';
+// Filter pencarian nama santri secara interaktif
+function filterSantriDropdown(query = ''){
+  const q = query.trim().toLowerCase();
+  const listEl = document.getElementById('santriDropdownList');
+  const clearBtn = document.getElementById('btnClearSantri');
   
-  // Urutkan alfabetis
-  const sorted = [...masterSantri].sort((a,b) => a.nama.localeCompare(b.nama));
-  
-  sorted.forEach(s => {
-    const opt = document.createElement('option');
-    opt.value = s.id || s.nama;
-    opt.textContent = `${s.nama} (${s.kamar})`;
-    opt.dataset.nama = s.nama;
-    opt.dataset.kelas = s.kelas;
-    opt.dataset.kamar = s.kamar;
-    opt.dataset.id = s.id;
-    sel.appendChild(opt);
+  clearBtn.classList.toggle('hidden', q.length === 0 && !selectedSantri);
+
+  // Cari yang cocok berdasarkan nama atau kamar
+  const matches = masterSantri.filter(s => {
+    return s.nama.toLowerCase().includes(q) || s.kamar.toLowerCase().includes(q);
+  });
+
+  if (matches.length === 0) {
+    listEl.innerHTML = '<div class="dropdown-empty">Nama tidak ditemukan. Silakan periksa ejaan atau hubungi pengurus asrama.</div>';
+    listEl.classList.remove('hidden');
+    return;
+  }
+
+  // Tampilkan hingga 15 hasil teratas
+  let html = matches.slice(0, 15).map(s => `
+    <div class="dropdown-item" 
+         data-id="${escapeHtml(s.id)}" 
+         data-nama="${escapeHtml(s.nama)}" 
+         data-kelas="${escapeHtml(s.kelas)}" 
+         data-kamar="${escapeHtml(s.kamar)}">
+      <div>
+        <strong>${highlightMatch(s.nama, q)}</strong>
+      </div>
+      <span>${escapeHtml(s.kamar)}</span>
+    </div>
+  `).join('');
+
+  listEl.innerHTML = html;
+  listEl.classList.remove('hidden');
+
+  listEl.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      selectSantri({
+        id: item.dataset.id,
+        nama: item.dataset.nama,
+        kelas: item.dataset.kelas,
+        kamar: item.dataset.kamar
+      });
+    });
   });
 }
 
-function handleSantriSelect(){
-  const sel = document.getElementById('santriSelectKeluar');
-  const opt = sel.options[sel.selectedIndex];
-  if(opt && opt.dataset.nama){
-    document.getElementById('kelasKeluar').value = opt.dataset.kelas || '-';
-    document.getElementById('kamarKeluar').value = opt.dataset.kamar || '-';
-  } else {
-    document.getElementById('kelasKeluar').value = '';
-    document.getElementById('kamarKeluar').value = '';
-  }
+function highlightMatch(text, query){
+  if (!query) return escapeHtml(text);
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return escapeHtml(text).replace(regex, '<mark style="background:#FFE699;padding:0 2px;border-radius:2px">$1</mark>');
+}
+
+function selectSantri(santri){
+  selectedSantri = santri;
+  document.getElementById('santriSearchInput').value = santri.nama;
+  document.getElementById('kelasKeluar').value = santri.kelas || '-';
+  document.getElementById('kamarKeluar').value = santri.kamar || '-';
+  document.getElementById('santriDropdownList').classList.add('hidden');
+  document.getElementById('btnClearSantri').classList.remove('hidden');
+  hideFeedback();
+}
+
+function clearSantriSelection(){
+  selectedSantri = null;
+  document.getElementById('santriSearchInput').value = '';
+  document.getElementById('kelasKeluar').value = '';
+  document.getElementById('kamarKeluar').value = '';
+  document.getElementById('santriDropdownList').classList.add('hidden');
+  document.getElementById('btnClearSantri').classList.add('hidden');
+  document.getElementById('santriSearchInput').focus();
 }
 
 function setMode(m){
@@ -703,6 +835,7 @@ function setMode(m){
   } else {
     document.getElementById('formKeluar').classList.add('hidden');
     document.getElementById('sectionMasuk').classList.remove('hidden');
+    document.getElementById('santriDropdownList').classList.add('hidden');
     loadActiveKeluarHariIni();
   }
   hideFeedback();
@@ -748,7 +881,6 @@ async function syncFromGoogleSheets(){
     if(result.status === 'success'){
       if(result.santri && result.santri.length > 0){
         masterSantri = result.santri;
-        populateSantriDropdown();
       }
       if(result.activeKeluar){
         activeKeluarHariIni = result.activeKeluar;
@@ -756,7 +888,7 @@ async function syncFromGoogleSheets(){
       }
     }
   }catch(e){
-    console.log('Menggunakan data offline awal');
+    console.log('Menggunakan database lokal offline');
   }
 }
 
@@ -778,7 +910,7 @@ async function loadActiveKeluarHariIni(){
   }
 }
 
-function renderActiveList(){
+function renderActiveList(filterKeyword = ''){
   const wrap = document.getElementById('activeListWrap');
   if(!activeKeluarHariIni || activeKeluarHariIni.length === 0){
     wrap.innerHTML = `
@@ -790,7 +922,18 @@ function renderActiveList(){
     return;
   }
 
-  let html = activeKeluarHariIni.map(item => `
+  let list = activeKeluarHariIni;
+  if(filterKeyword.trim()){
+    const fk = filterKeyword.trim().toLowerCase();
+    list = list.filter(item => item.nama.toLowerCase().includes(fk) || item.kamar.toLowerCase().includes(fk));
+  }
+
+  if(list.length === 0){
+    wrap.innerHTML = '<div class="empty">Nama tidak ditemukan di daftar santri yang sedang keluar hari ini.</div>';
+    return;
+  }
+
+  let html = list.map(item => `
     <div class="active-item">
       <div class="active-info">
         <strong>${escapeHtml(item.nama)}</strong>
@@ -809,18 +952,23 @@ function renderActiveList(){
 // Submit Catatan KELUAR
 async function handleSubmitKeluar(e){
   e.preventDefault();
-  const sel = document.getElementById('santriSelectKeluar');
-  const opt = sel.options[sel.selectedIndex];
   
-  if(!opt || !opt.dataset.nama){
-    showFeedback('Silakan pilih nama santri terlebih dahulu.', 'warn');
-    return;
+  const searchInputVal = document.getElementById('santriSearchInput').value.trim();
+  if(!selectedSantri || selectedSantri.nama.toLowerCase() !== searchInputVal.toLowerCase()){
+    // Cari yang persis sama jika user mengetik lengkap tanpa klik dropdown
+    const found = masterSantri.find(s => s.nama.toLowerCase() === searchInputVal.toLowerCase());
+    if(found){
+      selectSantri(found);
+    } else {
+      showFeedback('Silakan pilih nama santri dari daftar pencarian yang muncul.', 'warn');
+      return;
+    }
   }
 
-  const idSantri = opt.dataset.id || '';
-  const nama = opt.dataset.nama;
-  const kelas = opt.dataset.kelas || '';
-  const kamar = opt.dataset.kamar || '';
+  const idSantri = selectedSantri.id || '';
+  const nama = selectedSantri.nama;
+  const kelas = selectedSantri.kelas || '';
+  const kamar = selectedSantri.kamar || '';
   const tujuan = document.getElementById('tujuan').value.trim();
   const btn = document.getElementById('btnSubmitKeluar');
   const span = btn.querySelector('span');
@@ -848,14 +996,10 @@ async function handleSubmitKeluar(e){
 
     const result = await response.json();
     if(result.status === 'success'){
-      // Pesan notifikasi ramah sesuai permintaan user dengan bold pada "jangan lupa mengisi form masuk"
+      // Pesan notifikasi ramah dengan bold pada "jangan lupa mengisi form masuk"
       showFeedback(`Hati-hati di jalan yaa, dan <strong>jangan lupa mengisi form masuk</strong> saat kembali.`, 'ok');
       document.getElementById('formKeluar').reset();
-      document.getElementById('kelasKeluar').value = '';
-      document.getElementById('kamarKeluar').value = '';
-      sel.selectedIndex = 0;
-      
-      // Update data active keluar
+      clearSantriSelection();
       syncFromGoogleSheets();
     } else {
       showFeedback('Terjadi kesalahan: ' + (result.message || 'Gagal menyimpan.'), 'warn');
@@ -1073,7 +1217,6 @@ function exportCsv(){
 // Event Listeners
 document.getElementById('btnKeluar').addEventListener('click', () => setMode('keluar'));
 document.getElementById('btnMasuk').addEventListener('click', () => setMode('masuk'));
-document.getElementById('santriSelectKeluar').addEventListener('change', handleSantriSelect);
 document.getElementById('formKeluar').addEventListener('submit', handleSubmitKeluar);
 document.getElementById('adminToggle').addEventListener('click', toggleAdmin);
 document.getElementById('pinBtn').addEventListener('click', checkPin);
@@ -1083,8 +1226,25 @@ document.getElementById('reloadBtn').addEventListener('click', loadRekap);
 document.getElementById('csvBtn').addEventListener('click', exportCsv);
 document.getElementById('logoutBtn').addEventListener('click', lockAdminPanel);
 
+// Live search santri autocomplete
+const searchInput = document.getElementById('santriSearchInput');
+searchInput.addEventListener('input', (e) => filterSantriDropdown(e.target.value));
+searchInput.addEventListener('focus', (e) => filterSantriDropdown(e.target.value));
+document.getElementById('btnClearSantri').addEventListener('click', clearSantriSelection);
+
+// Filter pada daftar mode masuk
+document.getElementById('searchMasukInput').addEventListener('input', (e) => {
+  renderActiveList(e.target.value);
+});
+
+// Tutup dropdown jika klik di luar
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.autocomplete-wrap')) {
+    document.getElementById('santriDropdownList').classList.add('hidden');
+  }
+});
+
 // Inisialisasi
-populateSantriDropdown();
 setMode('keluar');
 tickClock();
 setInterval(tickClock, 1000);
