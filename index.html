@@ -1198,10 +1198,19 @@ async function handleSubmitKeluar(e){
 
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      redirect: 'follow'
     });
 
-    const result = await response.json();
+    const rawText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(rawText);
+    } catch(e) {
+      console.error('Response bukan JSON:', rawText);
+      throw new Error('Respon server tidak valid. Pastikan hak akses Google Apps Script disetel ke "Siapa Saja (Anyone)".');
+    }
+
     if(result.status === 'success'){
       showFeedback(result.message, 'ok');
       document.getElementById('formKeluar').reset();
@@ -1215,7 +1224,7 @@ async function handleSubmitKeluar(e){
     }
   } catch(err){
     console.error(err);
-    showFeedback('Gagal menghubungi Google Sheets. Periksa koneksi internet.', 'warn');
+    showFeedback('Gagal menghubungi Google Sheets: ' + (err.message || 'Periksa koneksi internet.'), 'warn');
   } finally {
     btn.disabled = false;
     span.textContent = originalText;
@@ -1238,10 +1247,18 @@ async function handleCheckIn(idSantri, nama){
 
     const response = await fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      redirect: 'follow'
     });
 
-    const result = await response.json();
+    const rawText = await response.text();
+    let result;
+    try {
+      result = JSON.parse(rawText);
+    } catch(e) {
+      throw new Error('Respon server tidak valid.');
+    }
+
     if(result.status === 'success'){
       showFeedback(result.message, 'ok');
       loadActiveKeluarHariIni();
@@ -1249,7 +1266,7 @@ async function handleCheckIn(idSantri, nama){
       showFeedback(result.message || 'Gagal mencatat masuk.', 'warn');
     }
   }catch(err){
-    showFeedback('Gagal menghubungi server. Periksa koneksi internet.', 'warn');
+    showFeedback('Gagal menghubungi server: ' + (err.message || 'Periksa koneksi internet.'), 'warn');
   }
 }
 
