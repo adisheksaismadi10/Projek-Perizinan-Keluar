@@ -267,6 +267,79 @@
     line-height: 1.4;
   }
 
+  /* Group / Teman Section */
+  .group-section{
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
+  }
+  .group-header{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .group-title{
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .btn-add-friend{
+    background: none;
+    border: 1.5px solid var(--primary);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+  }
+  .btn-add-friend:hover{
+    background: var(--primary);
+    color: #fff;
+  }
+  
+  .friends-chips-list{
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .friend-chip{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #EAF2EE;
+    border: 1px solid #BFDECB;
+    border-radius: 8px;
+    font-size: 13.5px;
+    animation: fadeIn 0.2s ease;
+  }
+  .friend-chip strong{
+    color: var(--primary-dark);
+  }
+  .friend-chip span{
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-left: 4px;
+  }
+  .btn-remove-friend{
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 2px 6px;
+    font-weight: 700;
+  }
+
   textarea{
     resize: vertical;
     min-height: 80px;
@@ -562,8 +635,9 @@
 
     <!-- FORM MODE KELUAR -->
     <form id="formKeluar">
+      <!-- Pemohon Utama -->
       <div class="autocomplete-wrap">
-        <label for="santriSearchInput">Nama santri (Ketik untuk mencari)</label>
+        <label for="santriSearchInput">Nama santri (Pemohon Utama)</label>
         <div class="search-box">
           <input type="text" id="santriSearchInput" placeholder="Ketik nama Anda (cth. Zaki / Adis)..." autocomplete="off" required>
           <button type="button" id="btnClearSantri" class="btn-clear-search hidden" title="Hapus">&times;</button>
@@ -577,8 +651,28 @@
       <label for="kamarKeluar">Kamar / Lorong <span class="readonly-badge">Otomatis</span></label>
       <input type="text" id="kamarKeluar" readonly placeholder="Terisi otomatis saat nama dipilih">
 
+      <!-- Fitur Pergi Bareng Teman -->
+      <div class="group-section">
+        <div class="group-header">
+          <span class="group-title">👥 Pergi bersama teman?</span>
+          <button type="button" id="btnToggleAddFriend" class="btn-add-friend">+ Tambah Teman</button>
+        </div>
+
+        <!-- Box Pencarian Teman -->
+        <div id="friendSearchBox" class="autocomplete-wrap hidden" style="margin-top:8px;">
+          <div class="search-box">
+            <input type="text" id="friendSearchInput" placeholder="Ketik nama teman yang ikut..." autocomplete="off">
+            <button type="button" id="btnCloseFriendSearch" class="btn-clear-search" title="Tutup">&times;</button>
+          </div>
+          <div id="friendDropdownList" class="dropdown-results hidden"></div>
+        </div>
+
+        <!-- Daftar Teman yang Ikut -->
+        <div id="friendsChipsList" class="friends-chips-list"></div>
+      </div>
+
       <label for="tujuan">Tujuan / keperluan keluar</label>
-      <textarea id="tujuan" required placeholder="cth. Beli makan malam, pulang ke rumah, kuliah malam..."></textarea>
+      <textarea id="tujuan" required placeholder="cth. Beli makan malam, kerja kelompok, pulang ke rumah..."></textarea>
 
       <button type="submit" class="submit-btn keluar" id="btnSubmitKeluar">
         <span>Catat waktu keluar</span>
@@ -749,8 +843,9 @@ let mode = 'keluar';
 let activeKeluarHariIni = [];
 let lastRecords = [];
 let selectedSantri = null;
+let addedFriends = []; // Daftar teman yang ditambahkan
 
-// Filter pencarian nama santri secara interaktif
+// Filter pencarian nama pemohon utama
 function filterSantriDropdown(query = ''){
   const q = query.trim().toLowerCase();
   const listEl = document.getElementById('santriDropdownList');
@@ -758,9 +853,10 @@ function filterSantriDropdown(query = ''){
   
   clearBtn.classList.toggle('hidden', q.length === 0 && !selectedSantri);
 
-  // Cari yang cocok berdasarkan nama atau kamar
   const matches = masterSantri.filter(s => {
-    return s.nama.toLowerCase().includes(q) || s.kamar.toLowerCase().includes(q);
+    // Kecualikan teman yang sudah ada di list
+    const isAlreadyFriend = addedFriends.some(f => (f.id && f.id === s.id) || f.nama === s.nama);
+    return !isAlreadyFriend && (s.nama.toLowerCase().includes(q) || s.kamar.toLowerCase().includes(q));
   });
 
   if (matches.length === 0) {
@@ -769,7 +865,6 @@ function filterSantriDropdown(query = ''){
     return;
   }
 
-  // Tampilkan hingga 15 hasil teratas
   let html = matches.slice(0, 15).map(s => `
     <div class="dropdown-item" 
          data-id="${escapeHtml(s.id)}" 
@@ -798,6 +893,51 @@ function filterSantriDropdown(query = ''){
   });
 }
 
+// Filter pencarian nama teman
+function filterFriendDropdown(query = ''){
+  const q = query.trim().toLowerCase();
+  const listEl = document.getElementById('friendDropdownList');
+
+  const matches = masterSantri.filter(s => {
+    const isLeader = selectedSantri && ((selectedSantri.id && selectedSantri.id === s.id) || selectedSantri.nama === s.nama);
+    const isAlreadyFriend = addedFriends.some(f => (f.id && f.id === s.id) || f.nama === s.nama);
+    return !isLeader && !isAlreadyFriend && (s.nama.toLowerCase().includes(q) || s.kamar.toLowerCase().includes(q));
+  });
+
+  if (matches.length === 0) {
+    listEl.innerHTML = '<div class="dropdown-empty">Nama tidak ditemukan atau sudah ditambahkan.</div>';
+    listEl.classList.remove('hidden');
+    return;
+  }
+
+  let html = matches.slice(0, 15).map(s => `
+    <div class="dropdown-item" 
+         data-id="${escapeHtml(s.id)}" 
+         data-nama="${escapeHtml(s.nama)}" 
+         data-kelas="${escapeHtml(s.kelas)}" 
+         data-kamar="${escapeHtml(s.kamar)}">
+      <div>
+        <strong>${highlightMatch(s.nama, q)}</strong>
+      </div>
+      <span>${escapeHtml(s.kamar)}</span>
+    </div>
+  `).join('');
+
+  listEl.innerHTML = html;
+  listEl.classList.remove('hidden');
+
+  listEl.querySelectorAll('.dropdown-item').forEach(item => {
+    item.addEventListener('click', () => {
+      addFriend({
+        id: item.dataset.id,
+        nama: item.dataset.nama,
+        kelas: item.dataset.kelas,
+        kamar: item.dataset.kamar
+      });
+    });
+  });
+}
+
 function highlightMatch(text, query){
   if (!query) return escapeHtml(text);
   const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -811,6 +951,7 @@ function selectSantri(santri){
   document.getElementById('kamarKeluar').value = santri.kamar || '-';
   document.getElementById('santriDropdownList').classList.add('hidden');
   document.getElementById('btnClearSantri').classList.remove('hidden');
+  updateSubmitButtonText();
   hideFeedback();
 }
 
@@ -821,7 +962,55 @@ function clearSantriSelection(){
   document.getElementById('kamarKeluar').value = '';
   document.getElementById('santriDropdownList').classList.add('hidden');
   document.getElementById('btnClearSantri').classList.add('hidden');
+  updateSubmitButtonText();
   document.getElementById('santriSearchInput').focus();
+}
+
+function addFriend(friend){
+  if (!addedFriends.some(f => (f.id && f.id === friend.id) || f.nama === friend.nama)) {
+    addedFriends.push(friend);
+    renderFriendsChips();
+    document.getElementById('friendSearchInput').value = '';
+    document.getElementById('friendDropdownList').classList.add('hidden');
+    document.getElementById('friendSearchBox').classList.add('hidden');
+    updateSubmitButtonText();
+  }
+}
+
+function removeFriend(index){
+  addedFriends.splice(index, 1);
+  renderFriendsChips();
+  updateSubmitButtonText();
+}
+
+function renderFriendsChips(){
+  const wrap = document.getElementById('friendsChipsList');
+  if (addedFriends.length === 0) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  let html = addedFriends.map((f, idx) => `
+    <div class="friend-chip">
+      <div>
+        🧑 <strong>${escapeHtml(f.nama)}</strong>
+        <span>(${escapeHtml(f.kamar || '-')})</span>
+      </div>
+      <button type="button" class="btn-remove-friend" onclick="removeFriend(${idx})" title="Hapus teman">&times;</button>
+    </div>
+  `).join('');
+
+  wrap.innerHTML = html;
+}
+
+function updateSubmitButtonText(){
+  const btnSpan = document.getElementById('btnSubmitKeluar').querySelector('span');
+  const total = (selectedSantri ? 1 : 0) + addedFriends.length;
+  if (total > 1) {
+    btnSpan.textContent = `Catat waktu keluar (${total} Orang)`;
+  } else {
+    btnSpan.textContent = `Catat waktu keluar`;
+  }
 }
 
 function setMode(m){
@@ -836,6 +1025,7 @@ function setMode(m){
     document.getElementById('formKeluar').classList.add('hidden');
     document.getElementById('sectionMasuk').classList.remove('hidden');
     document.getElementById('santriDropdownList').classList.add('hidden');
+    document.getElementById('friendDropdownList').classList.add('hidden');
     loadActiveKeluarHariIni();
   }
   hideFeedback();
@@ -873,7 +1063,6 @@ function hideFeedback(){
   document.getElementById('feedback').className = 'feedback';
 }
 
-// Sinkronisasi data master santri & izin keluar dari Google Sheets
 async function syncFromGoogleSheets(){
   try{
     const res = await fetch(`${SCRIPT_URL}?action=init`);
@@ -888,7 +1077,7 @@ async function syncFromGoogleSheets(){
       }
     }
   }catch(e){
-    console.log('Menggunakan database lokal offline');
+    console.log('Menggunakan database offline lokal');
   }
 }
 
@@ -949,26 +1138,37 @@ function renderActiveList(filterKeyword = ''){
   wrap.innerHTML = html;
 }
 
-// Submit Catatan KELUAR
+// Submit Catatan KELUAR (Mendukung Pergi Sendiri maupun Bareng Teman)
 async function handleSubmitKeluar(e){
   e.preventDefault();
   
   const searchInputVal = document.getElementById('santriSearchInput').value.trim();
   if(!selectedSantri || selectedSantri.nama.toLowerCase() !== searchInputVal.toLowerCase()){
-    // Cari yang persis sama jika user mengetik lengkap tanpa klik dropdown
     const found = masterSantri.find(s => s.nama.toLowerCase() === searchInputVal.toLowerCase());
     if(found){
       selectSantri(found);
     } else {
-      showFeedback('Silakan pilih nama santri dari daftar pencarian yang muncul.', 'warn');
+      showFeedback('Silakan pilih nama santri utama dari daftar pencarian yang muncul.', 'warn');
       return;
     }
   }
 
-  const idSantri = selectedSantri.id || '';
-  const nama = selectedSantri.nama;
-  const kelas = selectedSantri.kelas || '';
-  const kamar = selectedSantri.kamar || '';
+  // Gabungkan pemohon utama + semua teman
+  const allMembers = [
+    {
+      idSantri: selectedSantri.id || '',
+      nama: selectedSantri.nama,
+      kelas: selectedSantri.kelas || '',
+      kamar: selectedSantri.kamar || ''
+    },
+    ...addedFriends.map(f => ({
+      idSantri: f.id || '',
+      nama: f.nama,
+      kelas: f.kelas || '',
+      kamar: f.kamar || ''
+    }))
+  ];
+
   const tujuan = document.getElementById('tujuan').value.trim();
   const btn = document.getElementById('btnSubmitKeluar');
   const span = btn.querySelector('span');
@@ -986,7 +1186,10 @@ async function handleSubmitKeluar(e){
   try{
     const payload = {
       mode: 'keluar',
-      data: { idSantri, nama, kelas, kamar, tujuan }
+      data: { 
+        members: allMembers, 
+        tujuan: tujuan 
+      }
     };
 
     const response = await fetch(SCRIPT_URL, {
@@ -996,10 +1199,12 @@ async function handleSubmitKeluar(e){
 
     const result = await response.json();
     if(result.status === 'success'){
-      // Pesan notifikasi ramah dengan bold pada "jangan lupa mengisi form masuk"
-      showFeedback(`Hati-hati di jalan yaa, dan <strong>jangan lupa mengisi form masuk</strong> saat kembali.`, 'ok');
+      showFeedback(result.message, 'ok');
       document.getElementById('formKeluar').reset();
       clearSantriSelection();
+      addedFriends = [];
+      renderFriendsChips();
+      updateSubmitButtonText();
       syncFromGoogleSheets();
     } else {
       showFeedback('Terjadi kesalahan: ' + (result.message || 'Gagal menyimpan.'), 'warn');
@@ -1013,7 +1218,7 @@ async function handleSubmitKeluar(e){
   }
 }
 
-// Submit Catatan MASUK (1-Klik Tanpa Ketik, Hanya Hari yang Sama)
+// Submit Catatan MASUK
 async function handleCheckIn(idSantri, nama){
   if(!confirm(`Konfirmasi: ${nama} sudah kembali ke asrama sekarang?`)){
     return;
@@ -1226,11 +1431,38 @@ document.getElementById('reloadBtn').addEventListener('click', loadRekap);
 document.getElementById('csvBtn').addEventListener('click', exportCsv);
 document.getElementById('logoutBtn').addEventListener('click', lockAdminPanel);
 
-// Live search santri autocomplete
+// Live search santri utama autocomplete
 const searchInput = document.getElementById('santriSearchInput');
 searchInput.addEventListener('input', (e) => filterSantriDropdown(e.target.value));
 searchInput.addEventListener('focus', (e) => filterSantriDropdown(e.target.value));
 document.getElementById('btnClearSantri').addEventListener('click', clearSantriSelection);
+
+// Tambah Teman Controls
+const btnToggleAddFriend = document.getElementById('btnToggleAddFriend');
+const friendSearchBox = document.getElementById('friendSearchBox');
+const friendSearchInput = document.getElementById('friendSearchInput');
+const btnCloseFriendSearch = document.getElementById('btnCloseFriendSearch');
+
+btnToggleAddFriend.addEventListener('click', () => {
+  if (!selectedSantri) {
+    alert('Silakan pilih nama pemohon utama terlebih dahulu.');
+    searchInput.focus();
+    return;
+  }
+  friendSearchBox.classList.toggle('hidden');
+  if (!friendSearchBox.classList.contains('hidden')) {
+    friendSearchInput.focus();
+    filterFriendDropdown('');
+  }
+});
+
+btnCloseFriendSearch.addEventListener('click', () => {
+  friendSearchBox.classList.add('hidden');
+  document.getElementById('friendDropdownList').classList.add('hidden');
+});
+
+friendSearchInput.addEventListener('input', (e) => filterFriendDropdown(e.target.value));
+friendSearchInput.addEventListener('focus', (e) => filterFriendDropdown(e.target.value));
 
 // Filter pada daftar mode masuk
 document.getElementById('searchMasukInput').addEventListener('input', (e) => {
@@ -1241,6 +1473,7 @@ document.getElementById('searchMasukInput').addEventListener('input', (e) => {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.autocomplete-wrap')) {
     document.getElementById('santriDropdownList').classList.add('hidden');
+    document.getElementById('friendDropdownList').classList.add('hidden');
   }
 });
 

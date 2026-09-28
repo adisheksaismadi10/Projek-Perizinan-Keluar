@@ -1,14 +1,14 @@
 /**
- * GOOGLE APPS SCRIPT - SISTEM PERIZINAN ASRAMA (DENGAN MASTER DATA SANTRI)
+ * GOOGLE APPS SCRIPT - SISTEM PERIZINAN ASRAMA (DENGAN FITUR PERGI BARENG TEMAN)
  * 
  * Fitur Utama:
- * 1. Tab 'Master_Santri': Menyimpan database nama, kelas, dan kamar santri.
- *    -> Admin dapat mengubah kelas / kamar santri langsung di Spreadsheet ini kapan saja.
- * 2. Tab 'Catatan': Menyimpan riwayat keluar & masuk santri.
- * 3. Pencatatan Masuk Anti-Tertukar:
- *    -> Hanya mencocokkan izin keluar pada HARI YANG SAMA (hari ini).
- *    -> Menggunakan ID Santri unik sehingga tidak akan tertukar antar santri.
- * 4. Notifikasi Ramah: Menampilkan pesan "Hati-hati di jalan yaa, dan jangan lupa mengisi form masuk".
+ * 1. Tab 'Master_Santri': Database nama, kelas, dan kamar santri.
+ * 2. Tab 'Catatan': Riwayat log perorangan & rombongan.
+ * 3. Fitur Pergi Bareng Teman:
+ *    -> Sekali submit bisa mencatat beberapa santri sekaligus dengan tujuan & jam keluar yang sama.
+ *    -> Masing-masing santri tetap memiliki catatan individual sehingga bisa check-in masuk sendiri-sendiri atau bersama.
+ * 4. Pencatatan Masuk HANYA di Hari yang Sama.
+ * 5. Notifikasi ramah dengan penekanan pada form masuk.
  */
 
 const SHEET_CATATAN = 'Catatan';
@@ -154,7 +154,6 @@ function getOrCreateMasterSheet() {
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#1F4B4C').setFontColor('#FFFFFF');
     sheet.setFrozenRows(1);
 
-    // Masukkan data awal santri
     for (let i = 0; i < DATA_AWAL_SANTRI.length; i++) {
       sheet.appendRow(DATA_AWAL_SANTRI[i]);
     }
@@ -195,7 +194,7 @@ function doGet(e) {
     const action = (e && e.parameter && e.parameter.action) ? String(e.parameter.action) : '';
     const pin = (e && e.parameter && e.parameter.pin) ? String(e.parameter.pin).trim() : '';
     
-    // 1. Ambil daftar master data santri untuk dropdown form
+    // 1. Ambil data master santri & daftar santri yang sedang keluar HARI INI
     if (action === 'get_santri' || action === 'init') {
       const masterSheet = getOrCreateMasterSheet();
       const rows = masterSheet.getDataRange().getDisplayValues();
@@ -211,7 +210,6 @@ function doGet(e) {
         }
       }
       
-      // Ambil juga daftar santri yang sedang keluar HARI INI
       const catatanSheet = getOrCreateCatatanSheet();
       const cRows = catatanSheet.getDataRange().getDisplayValues();
       const todayStr = formatTanggalSimpel(new Date());
@@ -220,7 +218,6 @@ function doGet(e) {
       for (let i = 1; i < cRows.length; i++) {
         const rowTanggal = cleanStr(cRows[i][1]);
         const rowStatus = cleanStr(cRows[i][10]);
-        // FILTER KETAT: Hanya yang berstatus 'Belum Kembali' DAN tanggalnya HARI INI
         if (rowStatus === 'Belum Kembali' && rowTanggal === todayStr) {
           activeKeluar.push({
             idLog: cleanStr(cRows[i][0]),
@@ -291,45 +288,73 @@ function doPost(e) {
     const mode = contents.mode; // 'keluar' atau 'masuk'
     const payload = contents.data;
     
-    if (!payload || !payload.nama) {
-      return createJsonResponse({ status: 'error', message: 'Data santri tidak lengkap.' });
+    if (!payload) {
+      return createJsonResponse({ status: 'error', message: 'Data tidak lengkap.' });
     }
 
     const now = new Date();
     const tanggalStr = formatTanggalSimpel(now);
     const jamStr = formatJamSimpel(now);
-    
-    const idSantri = cleanStr(payload.idSantri || '');
-    const nama = cleanStr(payload.nama);
-    const kelas = cleanStr(payload.kelas || '');
-    const kamar = cleanStr(payload.kamar || '');
-    const tujuan = cleanStr(payload.tujuan || '');
 
     if (mode === 'keluar') {
-      const id = 'TRIP-' + now.getTime();
-      const newRow = [
-        id,
-        "'" + tanggalStr,
-        idSantri,
-        nama,
-        kelas,
-        kamar,
-        tujuan,
-        "'" + jamStr,
-        '', // Jam Masuk kosong
-        '', // Durasi kosong
-        'Belum Kembali'
-      ];
-      catatanSheet.appendRow(newRow);
+      // Mendukung array santri (Pergi Sendiri maupun Bareng Teman)
+      let listSantri = [];
+      if (Array.isArray(payload.members) && payload.members.length > 0) {
+        listSantri = payload.members;
+      } else if (payload.nama) {
+        listSantri = [payload];
+      }
+
+      if (listSantri.length === 0) {
+        return createJsonResponse({ status: 'error', message: 'Daftar santri tidak boleh kosong.' });
+      }
+
+      const baseTripId = 'TRIP-' + now.getTime();
+      const tujuan = cleanStr(payload.tujuan || '');
+      const namaList = [];
+
+      for (let i = 0; i < listSantri.length; i++) {
+        const s = listSantri[i];
+        const sId = cleanStr(s.idSantri || s.id || '');
+        const sNama = cleanStr(s.nama);
+        const sKelas = cleanStr(s.kelas || '');
+        const sKamar = cleanStr(s.kamar || '');
+
+        namaList.push(sNama);
+
+        const rowId = listSantri.length > 1 ? `${baseTripId}-${i + 1}` : baseTripId;
+        const newRow = [
+          rowId,
+          "'" + tanggalStr,
+          sId,
+          sNama,
+          sKelas,
+          sKamar,
+          tujuan,
+          "'" + jamStr,
+          '', // Jam Masuk kosong
+          '', // Durasi kosong
+          'Belum Kembali'
+        ];
+        catatanSheet.appendRow(newRow);
+      }
       
-      // Notifikasi ramah sesuai permintaan user:
-      // "Hati-hati di jalan yaa, dan jangan lupa mengisi form masuk" (dengan bold di form masuk)
+      let pesanSukses = '';
+      if (listSantri.length > 1) {
+        pesanSukses = `Tercatat: <strong>${listSantri.length} santri</strong> (${namaList.join(', ')}) izin keluar bersama pada pukul ${jamStr}. Hati-hati di jalan yaa, dan <strong>jangan lupa mengisi form masuk</strong> saat kembali.`;
+      } else {
+        pesanSukses = `Hati-hati di jalan yaa, dan <strong>jangan lupa mengisi form masuk</strong> saat kembali.`;
+      }
+
       return createJsonResponse({ 
         status: 'success', 
-        message: `Hati-hati di jalan yaa, dan <strong>jangan lupa mengisi form masuk</strong>.` 
+        message: pesanSukses 
       });
     } 
     else if (mode === 'masuk') {
+      const idSantri = cleanStr(payload.idSantri || '');
+      const nama = cleanStr(payload.nama || '');
+
       const rows = catatanSheet.getDataRange().getDisplayValues();
       let targetRowIndex = -1;
       let keluarStrRaw = '';
