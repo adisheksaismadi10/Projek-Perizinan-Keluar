@@ -955,7 +955,7 @@ function selectSantri(santri){
   hideFeedback();
 }
 
-function clearSantriSelection(){
+function clearSantriSelection(shouldFocus = false){
   selectedSantri = null;
   document.getElementById('santriSearchInput').value = '';
   document.getElementById('kelasKeluar').value = '';
@@ -963,7 +963,9 @@ function clearSantriSelection(){
   document.getElementById('santriDropdownList').classList.add('hidden');
   document.getElementById('btnClearSantri').classList.add('hidden');
   updateSubmitButtonText();
-  document.getElementById('santriSearchInput').focus();
+  if (shouldFocus) {
+    document.getElementById('santriSearchInput').focus();
+  }
 }
 
 function addFriend(friend){
@@ -1212,13 +1214,17 @@ async function handleSubmitKeluar(e){
     }
 
     if(result.status === 'success'){
+      if(document.activeElement) document.activeElement.blur();
       showFeedback(result.message, 'ok');
       document.getElementById('formKeluar').reset();
-      clearSantriSelection();
+      clearSantriSelection(false);
       addedFriends = [];
       renderFriendsChips();
       updateSubmitButtonText();
       syncFromGoogleSheets();
+      
+      const fb = document.getElementById('feedback');
+      if(fb) fb.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else {
       showFeedback('Terjadi kesalahan: ' + (result.message || 'Gagal menyimpan.'), 'warn');
     }
@@ -1456,7 +1462,7 @@ document.getElementById('logoutBtn').addEventListener('click', lockAdminPanel);
 const searchInput = document.getElementById('santriSearchInput');
 searchInput.addEventListener('input', (e) => filterSantriDropdown(e.target.value));
 searchInput.addEventListener('focus', (e) => filterSantriDropdown(e.target.value));
-document.getElementById('btnClearSantri').addEventListener('click', clearSantriSelection);
+document.getElementById('btnClearSantri').addEventListener('click', () => clearSantriSelection(true));
 
 // Tambah Teman Controls
 const btnToggleAddFriend = document.getElementById('btnToggleAddFriend');
