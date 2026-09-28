@@ -1187,6 +1187,10 @@ async function handleSubmitKeluar(e){
     const payload = {
       mode: 'keluar',
       data: { 
+        idSantri: allMembers[0].idSantri || '',
+        nama: allMembers[0].nama,
+        kelas: allMembers[0].kelas || '',
+        kamar: allMembers[0].kamar || '',
         members: allMembers, 
         tujuan: tujuan 
       }
