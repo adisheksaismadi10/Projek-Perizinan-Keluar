@@ -43,7 +43,7 @@ const DATA_AWAL_SANTRI = [
   ["SAFM-2023-012","Ikhsan Jordan Dwi Putra","Cepatan","3B Putra"],
   ["SAFM-2022-006","Kalingga Kencana LA","Cepatan","3B Putra"],
   ["SAFM-2025-011","Kenaz Shidqi Baswara","Lambatan","3B Putra"],
-  ["SAFM-2024-016","Laetitia Kayla Alika","Cepatan","3T Putra"],
+  ["SAFM-2024-016","Laetitia Kayla Alika","Cepatan","2B Putri"],
   ["SAFM-2026-011","M. Zidan Alfadillah","Lanjutan","2T Putra"],
   ["SAFM-2023-014","Mirza Athallah Salman","Cepatan","3B Putra"],
   ["SAFM-2022-008","Muhamad Satria Budi Bintang","Cepatan","2B Putra"],
